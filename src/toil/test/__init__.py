@@ -6,6 +6,7 @@ import tempfile
 import unittest
 import sys
 import uuid
+import subprocess
 
 from toil.common import toilPackageDirPath
 from toil.lib.bioio import getBasicOptionParser, parseSuiteTestOptions
@@ -81,6 +82,18 @@ def needs_mesos(test_item):
         import mesos.native
     except ImportError:
         return unittest.skip("Skipping test. Install Mesos to include this test.")(test_item)
+    except:
+        raise
+    else:
+        return test_item
+def needs_parasol(test_item):
+    """
+    Use as decorator so tests are only run if parasol is installed.
+    """
+    try:
+        subprocess.Popen("para")
+    except OSError:
+        return unittest.skip("Skipping test. Install Parasol to include this test.")(test_item)
     except:
         raise
     else:

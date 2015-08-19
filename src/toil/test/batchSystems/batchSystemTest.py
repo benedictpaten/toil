@@ -12,7 +12,7 @@ from toil.batchSystems.abstractBatchSystem import AbstractBatchSystem
 from toil.batchSystems.mesos.test import MesosTestSupport
 from toil.batchSystems.singleMachine import SingleMachineBatchSystem
 from toil.batchSystems.abstractBatchSystem import InsufficientSystemResources
-from toil.test import ToilTest, needs_mesos
+from toil.test import ToilTest, needs_mesos, needs_parasol
 
 log = logging.getLogger(__name__)
 
@@ -177,3 +177,11 @@ class MesosBatchSystemTest(hidden.AbstractBatchSystemTest, MesosTestSupport):
 class SingleMachineBatchSystemTest(hidden.AbstractBatchSystemTest):
     def createBatchSystem(self):
         return SingleMachineBatchSystem(config=self.config, maxCpus=numCores, maxMemory=50, maxDisk=1001)
+@needs_parasol
+class ParasolBatchSystemTest(hidden.AbstractBatchSystemTest):
+    """
+    Tests the Parasol batch system
+    """
+    def createBatchSystem(self):
+        from toil.batchSystems.parasol import ParasolBatchSystem
+        return ParasolBatchSystem(config=self.config, maxCpus=numCores, maxMemory=20)
