@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 #Copyright (C) 2011 by Benedict Paten (benedictpaten@gmail.com)
 #
 #Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -56,7 +54,7 @@ def main():
     
     assert len(args) <= 1 #Only toil may be specified as argument
     if len(args) == 1: #Allow toil directory as arg
-        options.toil = args[0]
+        options.jobStore = args[0]
         
     ##########################################
     #Now run the toil construction/leader
@@ -71,6 +69,3 @@ def main():
 def _test():
     import doctest      
     return doctest.testmod()
-
-if __name__ == '__main__':
-    main()

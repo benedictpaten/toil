@@ -30,11 +30,11 @@ class JobTest(ToilTest):
 
             # Create the jobs
             A = Job.wrapFn(f, "A", outFile)
-            B = Job.wrapFn(f, A.rv(0), outFile)
-            C = Job.wrapFn(f, B.rv(0), outFile)
-            D = Job.wrapFn(f, C.rv(0), outFile)
-            E = Job.wrapFn(f, D.rv(0), outFile)
-            F = Job.wrapFn(f, E.rv(0), outFile)
+            B = Job.wrapFn(f, A.rv(), outFile)
+            C = Job.wrapFn(f, B.rv(), outFile)
+            D = Job.wrapFn(f, C.rv(), outFile)
+            E = Job.wrapFn(f, D.rv(), outFile)
+            F = Job.wrapFn(f, E.rv(), outFile)
 
             # Connect them into a workflow
             A.addChild(B)
@@ -46,7 +46,7 @@ class JobTest(ToilTest):
 
             # Create the runner for the workflow.
             options = Job.Runner.getDefaultOptions()
-            options.toil = self._getTestJobStorePath()
+            options.jobStore = self._getTestJobStorePath()
             options.logLevel = "INFO"
             # Run the workflow, the return value being the number of failed jobs
             self.assertEquals(Job.Runner.startToil(A, options), 0)
@@ -173,7 +173,7 @@ class JobTest(ToilTest):
             rootJob = self.makeJobGraph(nodeNumber, childEdges, followOnEdges, outFile)
             # Run the job  graph
             options = Job.Runner.getDefaultOptions()
-            options.toil = "%s.%i" % (jobStore, test)
+            options.jobStore = "%s.%i" % (jobStore, test)
             failedJobs = Job.Runner.startToil(rootJob, options)
             self.assertEquals(failedJobs, 0)
             # Get the ordering add the implied ordering to the graph
