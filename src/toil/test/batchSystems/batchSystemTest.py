@@ -10,6 +10,7 @@ import multiprocessing
 
 from toil.batchSystems.abstractBatchSystem import AbstractBatchSystem
 from toil.batchSystems.mesos.test import MesosTestSupport
+from toil.batchSystems.parasolTestSupport import ParasolTestSupport
 from toil.batchSystems.singleMachine import SingleMachineBatchSystem
 from toil.batchSystems.abstractBatchSystem import InsufficientSystemResources
 from toil.test import ToilTest, needs_mesos, needs_parasol
@@ -128,7 +129,7 @@ class hidden:
             config = ElementTree.Element("config")
             config.attrib["log_level"] = 'DEBUG'
             config.attrib["job_store"] = '.'
-            config.attrib["parasol_command"] = None
+            config.attrib["parasol_command"] = 'parasol'
             config.attrib["try_count"] = str(2)
             config.attrib["max_job_duration"] = str(1)
             config.attrib["batch_system"] = None
@@ -178,10 +179,15 @@ class SingleMachineBatchSystemTest(hidden.AbstractBatchSystemTest):
     def createBatchSystem(self):
         return SingleMachineBatchSystem(config=self.config, maxCpus=numCores, maxMemory=50, maxDisk=1001)
 @needs_parasol
-class ParasolBatchSystemTest(hidden.AbstractBatchSystemTest):
+class ParasolBatchSystemTest(hidden.AbstractBatchSystemTest, ParasolTestSupport):
     """
     Tests the Parasol batch system
     """
     def createBatchSystem(self):
         from toil.batchSystems.parasol import ParasolBatchSystem
-        return ParasolBatchSystem(config=self.config, maxCpus=numCores, maxMemory=20)
+        self._startParasol()
+        return ParasolBatchSystem(config=self.config, maxCpus=numCores, maxMemory=20, maxDisk=1001)
+    def tearDown(self):
+        super(ParasolBatchSystemTest, self).tearDown()
+        self._stopParasol()
+        self.batchSystem.shutdown()

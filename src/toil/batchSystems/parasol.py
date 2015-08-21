@@ -99,8 +99,8 @@ def getUpdatedJob(parasolResultsFile, outputQueue1, outputQueue2):
 class ParasolBatchSystem(AbstractBatchSystem):
     """The interface for Parasol.
     """
-    def __init__(self, config, maxCpus, maxMemory):
-        AbstractBatchSystem.__init__(self, config, maxCpus, maxMemory) #Call the parent constructor
+    def __init__(self, config, maxCpus, maxMemory, maxDisk):
+        AbstractBatchSystem.__init__(self, config, maxCpus, maxMemory, maxDisk) #Call the parent constructor
         if maxMemory != sys.maxint:
             logger.warn("A max memory has been specified for the parasol batch system class of %i, but currently "
                         "this batchsystem interface does not support such limiting" % maxMemory)
@@ -115,6 +115,7 @@ class ParasolBatchSystem(AbstractBatchSystem):
         time.sleep(5) #Give batch system a second to sort itself out.
         logger.info("Removed any old jobs from the queue")
         #Reset the job queue and results
+        logger.info("running command: " + "%s -results=%s clear sick" % (self.parasolCommand, self.parasolResultsFile))
         exitValue = popenParasolCommand("%s -results=%s clear sick" % (self.parasolCommand, self.parasolResultsFile), False)[0]
         if exitValue is not None:
             logger.warn("Could not clear sick status of the parasol batch %s" % self.parasolResultsFile)
@@ -134,10 +135,10 @@ class ParasolBatchSystem(AbstractBatchSystem):
         self.usedCpus = 0
         self.jobIDsToCpu = {}
          
-    def issueBatchJob(self, command, memory, cpu):
+    def issueBatchJob(self, command, memory, cpu, disk):
         """Issues parasol with job commands.
         """
-        self.checkResourceRequest(memory, cpu)
+        self.checkResourceRequest(memory, cpu, disk)
         pattern = re.compile("your job ([0-9]+).*")
         parasolCommand = "%s -verbose -ram=%i -cpu=%i -results=%s add job '%s'" % (self.parasolCommand, memory, cpu, self.parasolResultsFile, command)
         #Deal with the cpus
@@ -228,6 +229,8 @@ class ParasolBatchSystem(AbstractBatchSystem):
         making it expensive. 
         """
         return 5400 #Once every 90 minutes
+    def shutdown(self):
+        pass
         
 def main():
     pass
