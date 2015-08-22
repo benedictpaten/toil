@@ -93,16 +93,18 @@ class hidden:
             self.batchSystem.checkResourceRequest(memory=10, cpu=1, disk=100)
 
         def testGetIssuedJobIDs(self):
-            self.batchSystem.issueBatchJob('sleep 1', memory=10, cpu=numCoresPerJob, disk=1000)
-            self.batchSystem.issueBatchJob('sleep 1', memory=10, cpu=numCoresPerJob, disk=1000)
-            self.assertEqual({0, 1}, set(self.batchSystem.getIssuedBatchJobIDs()))
+            issuedIDs = []
+            issuedIDs.append(self.batchSystem.issueBatchJob('sleep 1', memory=10, cpu=numCoresPerJob, disk=1000))
+            issuedIDs.append(self.batchSystem.issueBatchJob('sleep 1', memory=10, cpu=numCoresPerJob, disk=1000))
+            self.assertEqual(set(issuedIDs), set(self.batchSystem.getIssuedBatchJobIDs()))
 
         def testGetRunningJobIDs(self):
-            self.batchSystem.issueBatchJob('sleep 100', memory=10, cpu=.1, disk=1000)
-            self.batchSystem.issueBatchJob('sleep 100', memory=10, cpu=.1, disk=1000)
+            issuedIDs = []
+            issuedIDs.append(self.batchSystem.issueBatchJob('sleep 100', memory=10, cpu=.1, disk=1000))
+            issuedIDs.append(self.batchSystem.issueBatchJob('sleep 100', memory=10, cpu=.1, disk=1000))
             self.wait_for_jobs(numJobs=2)
-            # Assert that jobs were correctly labeled by JobID
-            self.assertEqual({0, 1}, set(self.batchSystem.getRunningBatchJobIDs().keys()))
+            # Assert that the issued jobs are running
+            self.assertEqual(set(issuedIDs), set(self.batchSystem.getRunningBatchJobIDs().keys()))
             # Assert that the length of the job was recorded
             self.assertTrue(len([t for t in self.batchSystem.getRunningBatchJobIDs().values() if t > 0]) == 2)
             self.batchSystem.killBatchJobs([0, 1])

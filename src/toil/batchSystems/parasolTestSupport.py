@@ -4,7 +4,6 @@ import subprocess
 from toil.batchSystems.parasol import popenParasolCommand
 from toil.lib.bioio import getTempFile
 
-log = logging.getLogger(__name__)
 
 class ParasolTestSupport(object):
     def _startParasol(self):
@@ -12,7 +11,6 @@ class ParasolTestSupport(object):
         self.machineList = getTempFile(rootDir=os.getcwd())
         with open(self.machineList, "w") as output:
             output.write("localhost 2 1024 /tmp /scratch 36000 r1")
-        
         self.startNode()
         self.startHub()
     def _stopParasol(self):
@@ -26,13 +24,4 @@ class ParasolTestSupport(object):
         return popenParasolCommand("paraHub %s &" % self.machineList)
     def stopHub(self):
         return popenParasolCommand("paraHubStop now")
-        os.remove(self.machineLis)
-def main():
-    ParasolTestSupport()._startParasol()
-    messages = popenParasolCommand("parasol list machines")
-    print messages
-    ParasolTestSupport()._stopParasol()
-
-if __name__ == "__main__":
-    main()
-    
+        os.remove(self.machineList)
