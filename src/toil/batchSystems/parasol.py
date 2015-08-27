@@ -140,7 +140,9 @@ class ParasolBatchSystem(AbstractBatchSystem):
         """
         self.checkResourceRequest(memory, cpu, disk)
         pattern = re.compile("your job ([0-9]+).*")
-        parasolCommand = "%s -verbose -ram=%i -cpu=%i -results=%s add job '%s'" % (self.parasolCommand, memory, cpu, self.parasolResultsFile, command)
+
+        #TODO parasol add job doesn't accept -cpu or -ram arguments
+        parasolCommand = "%s -verbose -results=%s add job '%s'" % (self.parasolCommand, self.parasolResultsFile, command)
         #Deal with the cpus
         self.usedCpus += cpu
         while True: #Process finished results with no wait

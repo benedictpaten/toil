@@ -8,10 +8,10 @@ import time
 import multiprocessing
 from toil.common import Config
 from toil.batchSystems.mesos.test import MesosTestSupport
-from toil.batchSystems.parasolTestSupport import ParasolTestSupport
 from toil.batchSystems.singleMachine import SingleMachineBatchSystem
 from toil.batchSystems.abstractBatchSystem import InsufficientSystemResources
 from toil.test import ToilTest, needs_mesos, needs_parasol
+from toil.lib.bioio import getTempFile
 
 log = logging.getLogger(__name__)
 
@@ -105,9 +105,10 @@ class hidden:
             self.wait_for_jobs(numJobs=2)
             # Assert that the issued jobs are running
             self.assertEqual(set(issuedIDs), set(self.batchSystem.getRunningBatchJobIDs().keys()))
+            log.info("running jobs: %s" % self.batchSystem.getRunningBatchJobIDs().keys())
             # Assert that the length of the job was recorded
             self.assertTrue(len([t for t in self.batchSystem.getRunningBatchJobIDs().values() if t > 0]) == 2)
-            self.batchSystem.killBatchJobs([0, 1])
+            self.batchSystem.killBatchJobs(issuedIDs)
 
         def testKillJobs(self):
             jobCommand = 'sleep 100'
@@ -122,9 +123,10 @@ class hidden:
         def testGetUpdatedJob(self):
             delay = 1
             jobCommand = 'sleep %i' % delay
+            issuedIDs = []
             for i in range(numJobs):
-                self.batchSystem.issueBatchJob(jobCommand, memory=10, cpu=numCoresPerJob, disk=1000)
-            jobs = set((i, 0) for i in range(numJobs))
+                issuedIDs.append(self.batchSystem.issueBatchJob(jobCommand, memory=10, cpu=numCoresPerJob, disk=1000))
+            jobs = set((issuedIDs[i], 0) for i in range(numJobs))
             self.wait_for_jobs(numJobs=numJobs, wait_for_completion=True)
             for i in range(numJobs):
                 jobs.remove(self.batchSystem.getUpdatedBatchJob(delay * 2))
@@ -182,16 +184,27 @@ class MesosBatchSystemTest(hidden.AbstractBatchSystemTest, MesosTestSupport):
 class SingleMachineBatchSystemTest(hidden.AbstractBatchSystemTest):
     def createBatchSystem(self):
         return SingleMachineBatchSystem(config=self.config, maxCpus=numCores, maxMemory=50, maxDisk=1001)
+
 @needs_parasol
-class ParasolBatchSystemTest(hidden.AbstractBatchSystemTest, ParasolTestSupport):
+class ParasolBatchSystemTest(hidden.AbstractBatchSystemTest):
     """
     Tests the Parasol batch system
     """
+
+    def testIssueJob(self):
+        """Override this test because parasol can't handle jobs with more than 
+        one command per line.
+        """
+        test_path = os.path.join(self.tempDir, 'test.txt')
+        # sleep 1 coupled to command as 'touch' was too fast for wait_for_jobs to catch
+        jobCommand = 'touch {}'.format(test_path)
+        self.batchSystem.issueBatchJob(jobCommand, memory=10, cpu=.1, disk=1000)
+        self.wait_for_jobs(wait_for_completion=True)
+        self.assertTrue(os.path.exists(test_path))
+
     def createBatchSystem(self):
         from toil.batchSystems.parasol import ParasolBatchSystem
-        self._startParasol()
         return ParasolBatchSystem(config=self.config, maxCpus=numCores, maxMemory=20, maxDisk=1001)
     def tearDown(self):
         super(ParasolBatchSystemTest, self).tearDown()
-        self._stopParasol()
         self.batchSystem.shutdown()
